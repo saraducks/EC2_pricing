@@ -54,28 +54,43 @@ class EC2Price:
             res[attr_name] = attr_value
         return res
 
-    #get the sku from the args
+    #get the sku from the args with unique results
     def get_sku(self, *args, **kwrags):
         # get the type of service (it's compute service for this API)
         product_family = kwrags.get('productfamily')
-
+        # final result is stored in Matched_result
+        Matched_result = {}
+        #remove redundancy
+        attribute_collision = set()
         #get the attributes to refine the sku search
         for sku, productFamily in self.instance_data['products'].items():
             if product_family is not None and product_family != productFamily:
                 continue
             matched_attributes = [productFamily['attributes'][index_attr]
                                   for index_attr in args if index_attr in product_family['attributes']]
-        #returns the matched attribute array
-        return matched_attributes
+            hash_result = self.hash(*matched_attributes)
+            if hash_result in Matched_result:
+                attribute_collision.add(hash_result)
+            if hash_result not in Matched_result:
+                result[hash_result] = sku
+
+        #returns the matched and unique result
+        return result
+
+
+    #hash function to remove the redundant results
+    def __hash__(self, *args):
+        return '|'.join(args)
 
 
 #seperate class to compute the EC2 instances based on parameters
 class ComputeEC2Price(EC2Price):
     def __init__(self, *args, **kwargs):
         self.operating_system = None,
-        self.instance_type = 't2.micro',
+        self.instancetype = 't2.micro',
         self.tenancy = 'Shared',
         self.preinstalledsoftware ='NA',
+        self.region = None
 
         #get the sku number out of the above combination
         self.sku = self.get_sku(
@@ -84,11 +99,22 @@ class ComputeEC2Price(EC2Price):
         )
 
     #get the ondemand instances pricing
+    def onDemandInstance(self, instance_type,
+                         operating_system = None,
+                         tenancy = None,
+                         preinstalledsoftware = None,
+                         region = None):
 
 
-    #get the reserved insatnces pricing
+
+    #get the reserved insatnces
 
 
+    #get the sku based on default or user passed values
+
+
+
+    #get the sku based on the
 e = EC2Price()
 e.find_sku(
   instance_type='c4.large',
