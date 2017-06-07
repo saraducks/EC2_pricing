@@ -104,13 +104,46 @@ class ComputeEC2Price(EC2Price):
                          tenancy = None,
                          preinstalledsoftware = None,
                          region = None):
+        ondemand_sku = self.retrive_sku(
+            instance_type = instance_type,
+            operating_system = operating_system,
+            tenancy = tenancy,
+            preinstalledsoftware = preinstalledsoftware,
+            region = region
+        )
+        term = self.instance_data['terms']['OnDemand'][ondemand_sku]
+        price_dimensions = next(term.items())['priceDimensions']
+        price_dimension = next(price_dimensions.items())
+        raw_price = price_dimension['pricePerUnit']['USD']
+        return float(raw_price)
 
-
-
-    #get the reserved insatnces
+    #get the reserved instances
 
 
     #get the sku based on default or user passed values
+     def retrive_sku(self, instance_type,
+                    operating_system = None,
+                    tenancy = None,
+                    preinstalledsoftware = None,
+                    region = None ):
+         if instance_type == None:
+             instance_type = self.instancetype
+         if region == None:
+             region = self.region
+         if not region:
+             raise ValueError("no such region defined ")
+         if region in EC2_REGIONS:
+             region = EC2_REGIONS[region]
+         tenancy = tenancy or self.tenancy
+         preinstalledsoftware = preinstalledsoftware or self.preinstalledsoftware
+
+         attributes = [instance_type, region, tenancy, preinstalledsoftware]
+
+         result_sku = self.sku.get(*attributes)
+         if result_sku is None:
+             raise ValueError("Unable to lookup SKU for attributes: {}"
+                              .format(attributes))
+         return result_sku
 
 
 
