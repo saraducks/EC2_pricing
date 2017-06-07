@@ -14,16 +14,15 @@ class EC2Price:
         self.default_region = None
 
     def find_sku(self, **attributes):
-        # Stores the result if Match is True
-        Matched_attributes = set()
         # convert to camel case
         camelcase_res = self.camelcase_conversion(attributes)
+        # Stores the result if Match is True
+        Matched_attributes = set()
         # for debugging and check if the result is in correct format
-        print(camelcase_res)
+        #print(camelcase_res)
         # search for sku using instance_data
         #print(self.instance_data)
         #boolean variable, set to False if there is no match
-        Match = True
         '''
         Returns the sku (unique number for the service/instance type)
         iterate through the instance data and search for sku, productFamily
@@ -33,12 +32,14 @@ class EC2Price:
         '''
         for sku, productFamily in self.instance_data['products'].items():
              attributes = productFamily['attributes']
-             for attr_name, attr_value in attributes.items():
-                 if attributes.get(attr_name) != attr_value:
+             Match = True
+             for attr_name, attr_value in camelcase_res.items():
+                 if not attributes.get(attr_name) == attr_value:
                      Match = False
                      break
-             if Match == True:
+             if Match:
                  Matched_attributes.add(sku)
+
         return Matched_attributes
 
 
@@ -102,13 +103,13 @@ class ComputeEC2Price(EC2Price):
     def onDemandInstance(self, instance_type,
                          operating_system = None,
                          tenancy = None,
-                         preinstalledsoftware = None,
+                         preinstalled_software = None,
                          region = None):
         ondemand_sku = self.retrive_sku(
             instance_type = instance_type,
             operating_system = operating_system,
             tenancy = tenancy,
-            preinstalledsoftware = preinstalledsoftware,
+            preinstalled_software = preinstalled_software,
             region = region
         )
         term = self.instance_data['terms']['OnDemand'][ondemand_sku]
@@ -118,10 +119,33 @@ class ComputeEC2Price(EC2Price):
         return float(raw_price)
 
     #get the reserved instances
+    def reservedInstances(self,
+                          instance_type,
+                          operating_system = None,
+                          tenancy = 'Shared',
+                          preinstalled_software = None,
+                          offering_class= None,
+                          lease_contract_length = None,
+                          purcahse_option= None,
+                          region = None):
+        # get the sku for the reserved instances
+        ondemand_sku = self.retrive_sku(
+            instance_type,
+            operating_system=operating_system,
+            tenancy=tenancy,
+            preinstalledsoftware= preinstalled_software,
+            region=region)
+
+        # length of the period you need instances
+        duration_attributes = [
+            purcahse_option,
+            offering_class,
+            lease_contract_length
+        ]
 
 
     #get the sku based on default or user passed values
-     def retrive_sku(self, instance_type,
+    def retrive_sku(self, instance_type,
                     operating_system = None,
                     tenancy = None,
                     preinstalledsoftware = None,
@@ -145,12 +169,9 @@ class ComputeEC2Price(EC2Price):
                               .format(attributes))
          return result_sku
 
-
-
-    #get the sku based on the
-e = EC2Price()
-e.find_sku(
-  instance_type='c4.large',
-  location='US East (N. Virginia)',
-  operating_system='Linux'
-)
+# e = EC2Price()
+# e.find_sku(
+#   instance_type='c4.large',
+#   location='US East (N. Virginia)',
+#   operating_system='Linux'
+# )
