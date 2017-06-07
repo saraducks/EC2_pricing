@@ -6,6 +6,7 @@ import requests, json
 '''
 # send the link request and parse them into the local JSON file
 url_response = requests.get("https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/index.json")
-print(url_response)
 
-print(url_response.json())
+#result is stored in JSON
+result = url_response.json()
+
