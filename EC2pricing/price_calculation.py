@@ -42,8 +42,6 @@ class EC2Price:
         return Matched_attributes
 
 
-
-
     #convert the '_' to the camel case letters
     def camelcase_conversion(self, attributes):
         res = {}
@@ -56,6 +54,39 @@ class EC2Price:
             res[attr_name] = attr_value
         return res
 
+    #get the sku from the args
+    def get_sku(self, *args, **kwrags):
+        # get the type of service (it's compute service for this API)
+        product_family = kwrags.get('productfamily')
+
+        #get the attributes to refine the sku search
+        for sku, productFamily in self.instance_data['products'].items():
+            if product_family is not None and product_family != productFamily:
+                continue
+            matched_attributes = [productFamily['attributes'][index_attr]
+                                  for index_attr in args if index_attr in product_family['attributes']]
+        #returns the matched attribute array
+        return matched_attributes
+
+
+#seperate class to compute the EC2 instances based on parameters
+class ComputeEC2Price(EC2Price):
+    def __init__(self, *args, **kwargs):
+        self.operating_system = None,
+        self.instance_type = 't2.micro',
+        self.tenancy = 'Shared',
+        self.preinstalledsoftware ='NA',
+
+        #get the sku number out of the above combination
+        self.sku = self.get_sku(
+            'instanceType', 'operatingSystem', 'tenancy', 'preInstalledSoftware','location',
+            productfamily = 'Compute Instance'
+        )
+
+    #get the ondemand instances pricing
+
+
+    #get the reserved insatnces pricing
 
 
 e = EC2Price()
