@@ -129,7 +129,7 @@ class ComputeEC2Price(EC2Price):
                           purcahse_option= None,
                           region = None):
         # get the sku for the reserved instances
-        ondemand_sku = self.retrive_sku(
+        reserved_sku = self.retrive_sku(
             instance_type,
             operating_system=operating_system,
             tenancy=tenancy,
@@ -143,6 +143,16 @@ class ComputeEC2Price(EC2Price):
             lease_contract_length
         ]
 
+        reserved_offerterm_result = self.get_reserved_offerterm(reserved_sku, duration_attributes)
+
+    # To return thr matching offer terms for reserved instances
+    def get_reserved_offerterm(self, *term_attributes, **kwargs):
+        '''
+        get the reserved term attributes first
+        Filter the reserved term attributes based on tern_attributes
+        returns the filtered reserved offerTerm from JSON file
+
+        '''
 
     #get the sku based on default or user passed values
     def retrive_sku(self, instance_type,
@@ -168,6 +178,8 @@ class ComputeEC2Price(EC2Price):
              raise ValueError("Unable to lookup SKU for attributes: {}"
                               .format(attributes))
          return result_sku
+
+
 
 # e = EC2Price()
 # e.find_sku(
